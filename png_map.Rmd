@@ -1,0 +1,112 @@
+---
+title: "png map"
+author: "Zoe Meers"
+date: "21 August 2017"
+output: html_document
+---
+```{r}
+library(leaflet)
+library(dplyr)
+library(rgdal)
+library(rvest)
+library(sp)
+library(htmltools)
+library(htmlwidgets)
+```
+
+
+```{r}
+#from http://gadm.org/download - search for PNG
+electorates <- readOGR("PNG_adm_shp", layer="PNG_adm2")
+View(electorates)
+provinces <- readOGR("PNG_adm_shp", layer="PNG_adm1")
+View(provinces)
+```
+
+
+
+
+```{r}
+#data scraping
+url <- "https://en.wikipedia.org/wiki/Members_of_the_National_Parliament_of_Papua_New_Guinea,_2017%E2%80%932022"
+mytable <- read_html(url) %>% 
+  html_nodes("table") %>% 
+  .[[1]] 
+
+#data cleaning
+PNG_MPs_prov <- mytable %>% html_table() %>%
+  filter(grepl("Provincial", Electorate)) %>%
+  mutate(gsub(" Provincial", "", Electorate))
+
+PNG_MPs_dis <- mytable %>% html_table() %>%
+  filter(grepl("Open", Electorate)) %>%
+  mutate(gsub(" Open", "", Electorate)) 
+
+PNG_MPs_prov$Electorate <- NULL
+PNG_MPs_dis$Electorate <- NULL
+
+colnames(PNG_MPs_prov)[5] <- "NAME_2"
+colnames(PNG_MPs_dis)[5] <- "NAME_2"
+
+PNG_MPs_prov[PNG_MPs_prov=="West Sepik"]<-"Sandaun"
+PNG_MPs_prov[PNG_MPs_prov=="NCD"]<-"National Capital District"
+PNG_MPs_dis[PNG_MPs_dis=="West Sepik"]<-"Sandaun"
+PNG_MPs_dis[PNG_MPs_dis=="NCD"]<-"National Capital District"
+PNG_MPs_dis[PNG_MPs_dis=="Hagen"]<-"Mount Hagen"
+PNG_MPs_dis[PNG_MPs_dis=="NCD"]<-"National Capital District"
+PNG_MPs_dis[PNG_MPs_dis=="Wosera-Gaui"]<-"Wosera-Gawi"
+PNG_MPs_dis[PNG_MPs_dis=="Sinasina-Yongomugl"]<-"Sina Sina-Yonggomugl"
+PNG_MPs_dis[PNG_MPs_dis=="Northern"]<-"Oro"
+PNG_MPs_prov[PNG_MPs_prov=="Northern"]<-"Oro"
+PNG_MPs_dis[PNG_MPs_dis=="Aitape Lumi"]<-"Aitape-Lumi"
+PNG_MPs_dis[PNG_MPs_dis=="Yangoru-Saussia"]<-"Yangoro-Saussia"
+PNG_MPs_dis[PNG_MPs_dis=="Koroba-Lake Kopiago"]<-"Koroba-Kopiago"
+PNG_MPs_dis[PNG_MPs_dis=="Tari"]<-"Tari-Pori"
+PNG_MPs_dis[PNG_MPs_dis=="Angalimp-South Waghi"]<-"Anglimp-South Waghi"
+PNG_MPs_dis[PNG_MPs_dis=="Huon Gulf"]<-"Huon"
+PNG_MPs_dis[PNG_MPs_dis=="Mendi"]<-"Mendi-Munihu"
+PNG_MPs_dis[PNG_MPs_dis=="Baiyer-Mul"]<-"Mul-Baiyer"
+PNG_MPs_dis[PNG_MPs_dis=="Moresby North-East"]<-"National Capital District"
+#PNG_MPs_dis[PNG_MPs_dis=="Moresby North-West"]<-"National Capital District"
+#PNG_MPs_dis[PNG_MPs_dis=="Moresby South"]<-"National Capital District"
+
+#merge with spatial data frame
+electorates <- sp::merge(electorates, PNG_MPs_dis, by="NAME_2")
+electorates <- sp::merge(electorates, PNG_MPs_prov, by.x="NAME_1", by.y="NAME_2")
+```
+
+
+```{r}
+#tooltip content
+content <-paste0("<strong>District Electorate: </strong>", electorates$NAME_2, "</br>", "<strong>District Party: </strong>", electorates$Party.x, "</br>","<strong>District Parliamentarian: </strong>", electorates$Member.x, "</br>", "<strong> Province: </strong>", electorates$NAME_1, "</br>", "<strong> Provincial MP: </strong>", electorates$Member.y, "</br>", "<strong> Provincial Party: </strong>", electorates$Party.y) %>%
+  lapply(HTML)
+
+#colors by province
+colorFactors = colorFactor(c('red', 'orange', 'purple', 'blue', 'hotpink', 'green','yellow','lightblue','violet','lavender',
+                             'forestgreen','navy','purple4','orangered1','skyblue1','mediumorchid','turquoise2',
+                             'indianred3','lightskyblue','deeppink3','steelblue','darkslategray'),
+                           domain = provinces$NAME_1)
+#map
+png_map <- leaflet() %>%
+  addTiles() %>%
+  addLegend(colors= colorFactors(provinces$NAME_1), 
+             labels=provinces$NAME_1, opacity = 1, 
+             labFormat = labelFormat(), title="Provinces", position=c("topleft")) %>%
+  addPolygons(data=provinces, 
+              color= colorFactors(provinces$NAME_1), 
+              weight = 1, smoothFactor = 0.5,
+              opacity = 1.0, fillOpacity = 0.8) %>%
+  addPolygons(data=electorates,  
+               weight = 1.5, smoothFactor = 0.5, opacity = 1.0, 
+               fillOpacity = 0, color="white",
+               highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = TRUE), 
+               label = ~content,  labelOptions = labelOptions(style = list("font-weight" = "normal", padding = "3px 8px"), textsize = "15px",direction = "auto"))
+png_map
+
+#save html widget for exporting
+saveWidget(png_map, file="~/png_map.html", selfcontained = TRUE, libdir = NULL,
+  background = "white", knitrOptions = list())
+             
+
+```
+
