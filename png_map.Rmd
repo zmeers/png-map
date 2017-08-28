@@ -4,7 +4,7 @@ author: "Zoe Meers"
 date: "21 August 2017"
 output: html_document
 ---
-```{r}
+```{r, echo=FALSE, print=FALSE, warning=FALSE, message=FALSE}
 library(leaflet)
 library(dplyr)
 library(rgdal)
@@ -15,18 +15,16 @@ library(htmlwidgets)
 ```
 
 
-```{r}
+```{r, echo=FALSE, print=FALSE, warning=FALSE, message=FALSE}
 #from http://gadm.org/download - search for PNG
 electorates <- readOGR("PNG_adm_shp", layer="PNG_adm2")
-View(electorates)
 provinces <- readOGR("PNG_adm_shp", layer="PNG_adm1")
-View(provinces)
 ```
 
 
 
 
-```{r}
+```{r, echo=FALSE, print=FALSE, warning=FALSE, message=FALSE}
 #data scraping
 url <- "https://en.wikipedia.org/wiki/Members_of_the_National_Parliament_of_Papua_New_Guinea,_2017%E2%80%932022"
 mytable <- read_html(url) %>% 
@@ -76,7 +74,7 @@ electorates <- sp::merge(electorates, PNG_MPs_prov, by.x="NAME_1", by.y="NAME_2"
 ```
 
 
-```{r}
+```{r, echo=FALSE, warning=FALSE}
 #tooltip content
 content <-paste0("<strong>District Electorate: </strong>", electorates$NAME_2, "</br>", "<strong>District Party: </strong>", electorates$Party.x, "</br>","<strong>District Parliamentarian: </strong>", electorates$Member.x, "</br>", "<strong> Province: </strong>", electorates$NAME_1, "</br>", "<strong> Provincial MP: </strong>", electorates$Member.y, "</br>", "<strong> Provincial Party: </strong>", electorates$Party.y) %>%
   lapply(HTML)
@@ -91,7 +89,7 @@ png_map <- leaflet() %>%
   addTiles() %>%
   addLegend(colors= colorFactors(provinces$NAME_1), 
              labels=provinces$NAME_1, opacity = 1, 
-             labFormat = labelFormat(), title="Provinces", position=c("topleft")) %>%
+             labFormat = labelFormat(), title="Provinces", position=c("topright")) %>%
   addPolygons(data=provinces, 
               color= colorFactors(provinces$NAME_1), 
               weight = 1, smoothFactor = 0.5,
