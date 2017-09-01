@@ -102,7 +102,7 @@ png_map <- leaflet() %>%
 png_map
 
 #save html widget for exporting
-saveWidget(png_map, file="~/png_map.html", selfcontained = TRUE, libdir = NULL,
+saveWidget(png_map, file="~/png_map_widget.html", selfcontained = TRUE, libdir = NULL,
   background = "white", knitrOptions = list())
              
 
