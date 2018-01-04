@@ -74,7 +74,7 @@ electorates <- sp::merge(electorates, PNG_MPs_prov, by.x="NAME_1", by.y="NAME_2"
 ```
 
 
-```{r, echo=FALSE, warning=FALSE}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 #tooltip content
 content <-paste0("<strong>District Electorate: </strong>", electorates$NAME_2, "</br>", "<strong>District Party: </strong>", electorates$Party.x, "</br>","<strong>District Parliamentarian: </strong>", electorates$Member.x, "</br>", "<strong> Province: </strong>", electorates$NAME_1, "</br>", "<strong> Provincial MP: </strong>", electorates$Member.y, "</br>", "<strong> Provincial Party: </strong>", electorates$Party.y) %>%
   lapply(HTML)
