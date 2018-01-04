@@ -15,7 +15,7 @@ library(htmlwidgets)
 ```
 
 
-```{r, echo=FALSE, print=FALSE, warning=FALSE, message=FALSE}
+```{r, echo=FALSE, print=FALSE, warning=FALSE, message=FALSE, include=FALSE}
 #from http://gadm.org/download - search for PNG
 electorates <- readOGR("PNG_adm_shp", layer="PNG_adm2")
 provinces <- readOGR("PNG_adm_shp", layer="PNG_adm1")
